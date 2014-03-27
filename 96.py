@@ -5,7 +5,6 @@ j = 0
 for i in range(0, 7, 3) + range(27, 34, 3) + range(54, 61, 3):
     box[j] = [i + x for x in [0, 1, 2, 9, 10, 11, 18, 19, 20]]
     j += 1
-print box
 row = {}
 for i in range(0, 9):
     row[i] = [j for j in range(i * 9, (i * 9) + 9)]
