@@ -1,15 +1,14 @@
 #!/usr/bin/python
 
-box = {}
-box[0] = [0,1,2,9,10,11,18,19,20]
-box[1] = [3,4,5,12,13,14,21,22,23]
-box[2] = [6,7,8,15,16,17,24,25,26]
-box[3] = [27,28,29,36,37,38,45,46,47]
-box[4] = [30,31,32,39,40,41,48,49,50]
-box[5] = [33,34,35,42,43,44,51,52,53]
-box[6] = [54,55,56,63,64,65,72,73,74]
-box[7] = [57,58,59,66,67,68,75,76,77]
-box[8] = [60,61,62,69,70,71,78,79,80]
+box = {0: [0,1,2,9,10,11,18,19,20], 1: [3,4,5,12,13,14,21,22,23], 2: [6,7,8,15,16,17,24,25,26], 3: [27,28,29,36,37,38,45,46,47], 4: [30,31,32,39,40,41,48,49,50], 5: [33,34,35,42,43,44,51,52,53], 6: [54,55,56,63,64,65,72,73,74], 7: [57,58,59,66,67,68,75,76,77], 8: [60,61,62,69,70,71,78,79,80]}
+row = {}
+for i in range(0, 9):
+    row[i] = [j for j in range(i * 9, (i * 9) + 9)]
+col = {}
+for i in range(0, 9):
+    col[i] = [j for j in range(i, 81, 9)]
+layout = {'box': box, 'col': col, 'row': row}
+
 
 def print_grid(grid):
     for x in range(0, 81, 9):
@@ -24,11 +23,11 @@ def print_possibles(possibles):
     print
 
 
-def find_sole_boxes(grid, possibles, boxnum):
+def find_sole(grid, possibles, direction, n):
 
     counts = {}
 
-    for x in box[boxnum]:
+    for x in layout[direction][n]:
         for digit in possibles[x]:
             if digit in counts:
                 counts[digit] += 1
@@ -36,67 +35,27 @@ def find_sole_boxes(grid, possibles, boxnum):
                 counts[digit] = 1
 
     for digit in counts:
-        if counts[digit] == 1:
-            for x in box[boxnum]:
+         if counts[digit] == 1:
+            for x in layout[direction][n]:
                 if digit in possibles[x]:
                     possibles[x] = [digit]                
 
     return (grid, possibles)
 
+def remove(grid, possibles, direction, n):
 
-def find_sole_rows(grid, possibles, row):
-
-    counts = {}
-
-    for x in range(row * 9, (row * 9) + 9):
-        for digit in possibles[x]:
-            if digit in counts:
-                counts[digit] += 1
-            else:
-                counts[digit] = 1
-
-    for digit in counts:
-        if counts[digit] == 1:
-            for x in range(row * 9, (row * 9) + 9):
-                if digit in possibles[x]:
-                    possibles[x] = [digit]                
-
-    return (grid, possibles)
-
-
-def find_sole_columns(grid, possibles, column):
-
-    counts = {}
-
-    for x in range(column, 81, 9):
-        for digit in possibles[x]:
-            if digit in counts:
-                counts[digit] += 1
-            else:
-                counts[digit] = 1
-
-    for digit in counts:
-        if counts[digit] == 1:
-            for x in range(column, 81, 9):
-                if digit in possibles[x]:
-                    possibles[x] = [digit]                
-
-    return (grid, possibles)
-
-
-def remove_rows(grid, possibles, row):
-    for x in range(row * 9, (row * 9) + 9):
+    for x in layout[direction][n]:
         if grid[x] != '0':
-            for y in range(row * 9, (row * 9) + 9):
+            for y in layout[direction][n]:
                 if x != y:
                     try:
                         possibles[y].remove(int(grid[x]))
                     except ValueError:
                         pass
 
-    for x in range(row * 9, (row * 9) + 9):
+    for x in layout[direction][n]:
         if len(possibles[x]) == 1:
-            for y in range(row * 9, (row * 9) + 9):
+            for y in layout[direction][n]:
                 if x != y:
                     try:
                         possibles[y].remove(int(possibles[x][0]))
@@ -106,45 +65,11 @@ def remove_rows(grid, possibles, row):
     return (grid, possibles)
 
 
-def remove_columns(grid, possibles, column):
-    for x in range(column, 81, 9):
-        if grid[x] != '0':
-            for y in range(column, 81, 9):
-                if x != y:
-                    try:
-                        possibles[y].remove(int(grid[x]))
-                    except ValueError:
-                        pass
-
-    for x in range(column, 81, 9):
-        if len(possibles[x]) == 1:
-            for y in range(column, 81, 9):
-                if x != y:
-                    try:
-                        possibles[y].remove(int(possibles[x][0]))
-                    except ValueError:
-                        pass
-
-    return (grid, possibles)
-
-
-def remove_box(grid, possibles, boxnum):
-    for x in box[boxnum]:
-        if grid[x] != '0':
-            for y in box[boxnum]:
-                if x != y:
-                    try:
-                        possibles[y].remove(int(grid[x]))
-                    except ValueError:
-                        pass
-
-    return (grid, possibles)
-
-def look_for_dupes_in_rows(grid, possibles, row):
+def dupes(grid, possibles, direction, n):
 
     found = {}
 
-    for x in range(row * 9, (row * 9) + 9):
+    for x in layout[direction][n]:
         s = "".join('{0}'.format(n) for n in possibles[x])
         if s in found:
             found[s] += 1
@@ -153,7 +78,7 @@ def look_for_dupes_in_rows(grid, possibles, row):
 
     for f in found:
         if found[f] > 1 and found[f] == len(f):
-            for x in range(row * 9, (row * 9) + 9):
+            for x in layout[direction][n]:
                 s = "".join('{0}'.format(n) for n in possibles[x])
                 if s != f:
                     for digit in f:
@@ -164,53 +89,6 @@ def look_for_dupes_in_rows(grid, possibles, row):
 
     return (grid, possibles)
 
-def look_for_dupes_in_columns(grid, possibles, column):
-
-    found = {}
-
-    for x in range(column, 81, 9):
-        s = "".join('{0}'.format(n) for n in possibles[x])
-        if s in found:
-            found[s] += 1
-        else:
-            found[s] = 1
-
-    for f in found:
-        if found[f] > 1 and found[f] == len(f):
-            for x in range(column, 81, 9):
-                s = "".join('{0}'.format(n) for n in possibles[x])
-                if s != f:
-                    for digit in f:
-                        try:
-                            possibles[x].remove(int(digit))
-                        except ValueError:
-                            pass
-
-    return (grid, possibles)
-
-def look_for_dupes_in_box(grid, possibles, boxnum):
-
-    found = {}
-
-    for x in box[boxnum]:
-        s = "".join('{0}'.format(n) for n in possibles[x])
-        if s in found:
-            found[s] += 1
-        else:
-            found[s] = 1
-
-    for f in found:
-        if found[f] > 1 and found[f] == len(f):
-            for x in box[boxnum]:
-                s = "".join('{0}'.format(n) for n in possibles[x])
-                if s != f:
-                    for digit in f:
-                        try:
-                            possibles[x].remove(int(digit))
-                        except ValueError:
-                            pass
-
-    return (grid, possibles)
 
 def is_solved(possibles):
     for x in range(0, 81):
@@ -233,46 +111,32 @@ def solve(grid):
 
     while True:
 
-        for i in range(0, 9):
-            (grid, possibles) = remove_rows(grid, possibles, i)
+        for x in ['box', 'row', 'col']:
+            for i in range(0, 9):
+                (grid, possibles) = find_sole(grid, possibles, x, i)
 
-        for i in range(0, 9):
-            (grid, possibles) = remove_columns(grid, possibles, i)
+        for x in ['box', 'row', 'col']:
+            for i in range(0, 9):
+                (grid, possibles) = remove(grid, possibles, x, i)
 
-        for box in range(0, 9):
-            (grid, possibles) = remove_box(grid, possibles, box)
-
-        for i in range(0, 9):
-            (grid, possibles) = find_sole_rows(grid, possibles, i)
-
-        for i in range(0, 9):
-            (grid, possibles) = find_sole_columns(grid, possibles, i)
-
-        for i in range(0, 9):
-            (grid, possibles) = find_sole_boxes(grid, possibles, i)
-
-        for i in range(0, 9):
-            (grid, possibles) = look_for_dupes_in_box(grid, possibles, i)
-
-        for i in range(0, 9):
-            (grid, possibles) = look_for_dupes_in_rows(grid, possibles, i)
-
-        for i in range(0, 9):
-            (grid, possibles) = look_for_dupes_in_columns(grid, possibles, i)
+        for x in ['box', 'row', 'col']:
+            for i in range(0, 9):
+                (grid, possibles) = dupes(grid, possibles, x, i)
 
         if is_solved(possibles):
             print_possibles(possibles)
-            break
+            return 0
         else:
             tally += 1
 
         if tally > 20:
             print "I give up"
             print_possibles(possibles)
-
-            break
+            return 1
 
 if __name__ == "__main__":
+
+    unsolved = 0
 
     grid = "003020600900305001001806400008102900700000008006708200002609500800203009005010300"
     g = '''003020600900305001001806400008102900700000008006708200002609500800203009005010300
@@ -331,5 +195,6 @@ if __name__ == "__main__":
 #    solve(grid)
 
     for grid in g.split('\n'):
-        solve(grid)
+        unsolved += solve(grid)
 
+    print "Couldn't solve %d" % (unsolved)
