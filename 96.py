@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import copy
+
 box = {}
 j = 0
 for i in range(0, 7, 3) + range(27, 34, 3) + range(54, 61, 3):
@@ -12,6 +14,10 @@ col = {}
 for i in range(0, 9):
     col[i] = [j for j in range(i, 81, 9)]
 layout = {'box': box, 'col': col, 'row': row}
+
+
+def get_sol(grid):
+    return int(grid[0:3])
 
 
 def print_grid(grid):
@@ -106,6 +112,13 @@ def is_solved(possibles):
     return True
 
 
+def is_failed(possibles):
+    for x in range(0, 81):
+        if len(possibles[x]) == 0:
+            return True
+    return False
+
+
 def possibles_to_grid(possibles):
 
     grid = ""
@@ -115,17 +128,27 @@ def possibles_to_grid(possibles):
     return grid
 
 
-def solve(grid):
+def guess_a_spot(possibles):
 
-    possibles = {}
+    p = dict(possibles)
+
+    for i in range(2, 10):
+        for x in range(0, 81):
+            if len(p[x]) == i:
+                p[x] = [p[x][0]]
+                return (p, (x, p[x][0]))
+
+def solve(grid, possibles = {}, guess = False):
+
     tally = 0
 
-    for i in range(0, 81):
-        digit = int(grid[i])
-        if digit != 0:
-            possibles[i] = [digit]
-        else:
-            possibles[i] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    if possibles == {}:
+        for i in range(0, 81):
+            digit = int(grid[i])
+            if digit != 0:
+                possibles[i] = [digit]
+            else:
+                possibles[i] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     while True:
 
@@ -141,17 +164,30 @@ def solve(grid):
             for i in range(0, 9):
                 (grid, possibles) = dupes(grid, possibles, x, i)
 
+        if is_failed(possibles):
+            return -1
+
         if is_solved(possibles):
             grid = possibles_to_grid(possibles)
             print_grid(grid)
+#            print_sol(grid)
             return 0
         else:
             tally += 1
 
-        if tally > 20:
-            print "I give up"
-            print_possibles(possibles)
-            return 1
+        if tally > 20 and guess:
+            backup = copy.deepcopy(possibles)
+            backup_grid = str(grid)
+
+            (p, (position, value)) = guess_a_spot(possibles)
+            s = solve(grid, p, True)
+            if s == -1:
+                possibles = copy.deepcopy(backup)
+                grid = str(backup_grid)
+                possibles[position].remove(int(value))
+                tally = 0
+            else:
+                return 1
 
 if __name__ == "__main__":
 
@@ -209,11 +245,12 @@ if __name__ == "__main__":
 000003017015009008060000000100007000009000200000500004000000020500600340340200000
 300200000000107000706030500070009080900020004010800050009040301000702000000008006'''
 
-#    grid = "000000907000420180000705026100904000050000040000507009920108000034059000507000000"
+#    grid = "300200000000107000706030500070009080900020004010800050009040301000702000000008006"
 #    print_grid(grid)
-#    solve(grid)
+#    solve(grid, {}, True)
 
     for grid in g.split('\n'):
-        unsolved += solve(grid)
-
+        s = solve(grid, {}, True)
+        if s == "-1":
+            print "Couldn't solve this"
     print "Couldn't solve %d" % (unsolved)
